@@ -76,10 +76,10 @@ class UtilityFunctions(unittest.TestCase):
         graph.add_transition([1, 0], [1, 1], 1)
 
         expected_truth_table = [
-            ('[0, 0]', '[0, 1]'),
-            ('[0, 1]', '[1, 1]'),
-            ('[1, 1]', '[1, 0]'),
-            ('[1, 0]', '[1, 1]')
+            ([0, 0], [0, 1]),
+            ([0, 1], [1, 1]),
+            ([1, 1], [1, 0]),
+            ([1, 0], [1, 1])
         ]
         self.assertEqual(graph.get_truth_table(), expected_truth_table)
 
@@ -95,10 +95,10 @@ class ConstructTransitionGraph(unittest.TestCase):
 
         graph = ABN.transition_graph_construction(timeseries)
         expected_truth_table = [
-                ('[0, 0]', '[0, 1]'),
-                ('[0, 1]', '[1, 1]'),
-                ('[1, 1]', '[1, 0]'),
-                ('[1, 0]', '[1, 1]')
+                ([0, 0], [0, 1]),
+                ([0, 1], [1, 1]),
+                ([1, 1], [1, 0]),
+                ([1, 0], [1, 1])
             ]
         self.assertEqual(graph.get_truth_table(), expected_truth_table)
 
@@ -114,7 +114,25 @@ class ConstructTransitionGraph(unittest.TestCase):
         expected_truth_table = []
         self.assertEqual(graph.get_truth_table(), expected_truth_table)
 
+    def test_transition_graph_3vars(self):
+        timeseries= [
+            ([0, 0, 0],[0, 1, 0]),
+            # ([0, 0, 1],[0, 1, 1]),
+            # ([0, 1, 0],[0, 0, 0]),
+            ([0, 1, 1],[1, 0, 1]),
+            ([1, 0, 0],[0, 1, 0]),
+            # ([1, 0, 1],[0, 1, 1]),
+            # ([1, 1, 0],[0, 0, 0]),
+            ([1, 1, 1],[1, 0, 1]),
+        ]
 
+        graph = ABN.transition_graph_construction(timeseries)
+        async_time_series = graph.get_async_time_series()
+        print(async_time_series)
+
+    def test_parse_partial_functions(self):
+        partial_function = "x_0 & p1(x_1, x_2)"
+        ABN.parse_partial_function(partial_function)
 
 
 

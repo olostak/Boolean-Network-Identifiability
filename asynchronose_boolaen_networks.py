@@ -1,4 +1,5 @@
-from itertools import permutations 
+from itertools import permutations, product
+from collections import deque
 
 
 class Node:
@@ -41,12 +42,27 @@ class TransitionGraph:
         truth_table = []
         for node_key in self.nodes:
             node = self.nodes[str(node_key)]
-            state = node.state
-            next_state = state.copy()
-            for i in node.transitions.keys():
-                next_state[i] = (next_state[i] + 1 ) % 2
-            truth_table.append((str(state), str(next_state)))
+            if node.transitions.keys():
+                state = node.state
+                next_state = state.copy()
+                for i in node.transitions.keys():
+                    next_state[i] = (next_state[i] + 1 ) % 2
+                truth_table.append((state, next_state))
         return truth_table
+    
+    def get_async_time_series(self):
+        time_series = []
+        for node_key in self.nodes:
+            node = self.nodes[str(node_key)]
+            if node.transitions.keys():
+                state = node.state
+                for i in node.transitions.keys():
+                    next_state = state.copy()
+                    next_state[i] = (next_state[i] + 1 ) % 2
+                    time_series.append((state, next_state))
+        return time_series
+
+
 
 def check_path_respect_stable(changes, state, stable):
     prev_state = state.copy()
@@ -62,6 +78,8 @@ def add_path_to_graph(graph, state, path):
     for change in path:
         next_state = prev_state.copy()
         next_state[change] = (prev_state[change] + 1 ) % 2
+        if prev_state == [1, 0, 1]:
+            print(f"# {prev_state} -> {next_state}")
         graph.add_transition(prev_state, next_state, change)
         prev_state = next_state
 
@@ -91,8 +109,74 @@ def transition_graph_construction(timeseries):
             if len_paths == 0:
                 return TransitionGraph()
         elif len(changes) == 1:
+            # print(f"{state} -> {transition}")
             graph.add_transition(state, transition, changes[0])
     return graph
 
+def truth_table_to_sop(truth_table):
+    sop_terms = []
 
+    for row in truth_table:
+        inputs, output = row
+        if output == 1:
+            term = []
+            for idx, val in enumerate(inputs):
+                if val == 1:
+                    term.append(f"x_{idx}")
+                else:
+                    term.append(f"!x_{idx}")
+            sop_terms.append(' & '.join(term))
+    return ' | '.join(['({})'.format(item) for item in sop_terms])    
+
+
+def print_function(bn, compatible_instantiations):
+    stg = SymbolicAsyncGraph(bn)
+    projection = SymbolicProjection(stg, compatible_instantiations, retained_functions=["2"])
+    for (state, functions) in projection:
+        print([ function.to_string() for (var, function) in functions])
+
+
+    
+
+def generate_all_possible_functions(bn, n, timeserie, partial_bdd, state_variables):
+    k = len(timeserie[0][0])
+    all_combinations = list(product([1, 0], repeat=k))
+    missing = len(all_combinations) - len(timeserie)
+    missing_inputs = []
+    for input_i in all_combinations:
+        missing_flg = True
+        for state in timeserie:
+            if list(input_i) == state[0]:
+                missing_flg = False
+        if missing_flg:
+            missing_inputs.append(input_i)
+    missing_outputs = list(product([1, 0], repeat=missing))
+    possible_functions = []
+    counter = 0
+    for i in range(len(missing_outputs)):
+        truth_table = []
+        for input, output in timeserie:
+            truth_table.append((tuple(input), output[n]))
+        for m in range(len(missing_outputs[i])):
+            truth_table.append((tuple(missing_inputs[m]), missing_outputs[i][m]))
+        expression = truth_table_to_sop(truth_table)
+
+        update_function = UpdateFunction(expression, bn)
+        bdd = ctx.mk_update_function_is_true(update_function)
+        instantiations = partial_bdd.l_iff(bdd)
+        instantiations = instantiations.project_for_all(state_variables)
+        if not instantiations.is_false():
+            print(">>>", expression)
+            counter += 1
+    print(f"{counter} / {len(missing_outputs)}")
+    return possible_functions
+
+
+def parse_partial_function(partial_function):
+    partial_function_parts = partial_function.split(" ")
+    
+
+
+
+    
     
