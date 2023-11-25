@@ -1,5 +1,8 @@
 import os
 import random
+from biodivine_aeon import *
+from pathlib import Path
+from  benchmarks import *
 
 timeseries= [
 ([0, 0, 0],[0, 1, 0]),
@@ -11,6 +14,7 @@ timeseries= [
 ([1, 1, 0],[0, 0, 0]),
 ([1, 1, 1],[1, 0, 1]),
 ]
+
 
 def generate_operations(x, nodes):
     y = x % nodes
@@ -75,7 +79,7 @@ def generate_time_series(nodes, max_K, num_of_samples, noise):
 
 random.seed(42)
 input_paths = []
-for i in range(len(timeseries) // 2):
+for i in range(len(timeseries) - (len(timeseries) - 5)):
     path = f"./evaluate/evaluate_missing_{i}.txt"
     input_paths.append(path)
     n = len(timeseries) - i  # Number of unique random numbers you want
@@ -86,14 +90,40 @@ for i in range(len(timeseries) // 2):
         f.write(f"{str(timeseries[j][0])},{str(timeseries[j][1])}\n")
     f.close()
 
+print(input_paths)
+
 for input_path in input_paths:
     output_path = input_path.replace(".txt", "")
-    os.system(f"python3 ./aproximative_method.py --input_path {input_path} --output_path {output_path} --max_k 3")
+    os.system(f"python3 ./aproximative_method.py --input_path {input_path} --output_path {output_path} --max_k 9")
+
+    print(f"{output_path}/infered.aeon")
+    infered_string = Path(f"{output_path}/infered.aeon").read_text()
+    bn_infered = BooleanNetwork.from_aeon(infered_string)
+
+    original_string = Path(f"./evaluate/original.aeon").read_text()
+    bn_original = BooleanNetwork.from_aeon(original_string)
+
+    benchmarks_file = open(f"{output_path}/benchmarks.txt", "w")
+
+    shortest_path = benchmark_shortest_path.run_benchmark(bn_original, bn_infered)
+    print(f"Shortest path: {shortest_path}")
+    benchmarks_file.write(f"Shortest path: {shortest_path}\n")
+
+    attractor_count = benchmark_attractor_count.run_benchmark(bn_original, bn_infered)
+    print(f"Attractor count: {attractor_count}")
+    benchmarks_file.write(f"Shortest path: {shortest_path}\n")
+
+    truth_table = benchmark_truth_tables.run_benchmark(bn_original, bn_infered)
+    print(f"Truth table: {truth_table}")
+    benchmarks_file.write(f"Truth table: {truth_table }\n")
+    benchmarks_file.close()
+    
 
 for input_path in input_paths:
     output_path = input_path.replace(".txt", "")
     psbn_path = "test_psbn.aeon"
     os.system(f"python3 ./deterministic_method.py --ts_path {input_path} --psbn_path {psbn_path}")
+    print("#########################################################################################")
 
 
 

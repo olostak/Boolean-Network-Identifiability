@@ -14,7 +14,7 @@ import os
 from wrapdisc.var import RandintVar
 from wrapdisc import Objective
 
-LAMBDA = 0.5 # regularization parameter
+LAMBDA = 0.2 # regularization parameter
 
 pattern = r"(\d+) (xor|nand|nor) (\d+)"
 def replace_nonelementar_operations(match):
@@ -41,8 +41,6 @@ def initial_vector(partial_function, nodes, k):
     for i in range(k-1):
         initial_solution.append(random.randint(nodes*k, nodes*k + 1))
         variables.append(RandintVar(nodes*k, nodes*k + 1))
-    print(variables)
-    print(initial_solution)
     return variables, initial_solution
             
 
@@ -137,26 +135,26 @@ def infer_boolean_network(time_series, partial_functions, max_K):
         for i in range(k-1):
             initial_solution.append(random.randint(nodes*k, nodes*k + 1))
             variables.append(RandintVar(nodes*k, nodes*k + 1))
-        print(variables)
-        print(initial_solution)
         return variables, initial_solution
 
     def objective_function(bf):
 
         regulators = []
         # penalize solutions with repeting regulator
-        """for i in range(get_num_of_regulators(bf)):
+        for i in range(get_num_of_regulators(bf)):
             if (bf[i] >= 0 and bf[i] in regulators) or (bf[i] < 0 and abs(bf[i] + 1) in regulators):
                 return len(time_series)
-            regulators.append(bf[i] if bf[i] >= 0 else abs(bf[i]) - 1)"""
+            regulators.append(bf[i] if bf[i] >= 0 else abs(bf[i]) - 1)
         boolean_function = get_expression(bf)
         error = 0
-        for i in range(0, len(time_series)-1, 2):
+        for i in range(0, len(time_series)-1):
             target_val = eval(boolean_function.format(*time_series[i][0]))
             error += (time_series[i][1][node] - target_val)**2
-        error += (LAMBDA / (2 * len(time_series))) * round((len(bf) + 0.5) / 2) #regularization
-        return error
 
+        error = error / len(time_series) + ((LAMBDA / (2 * len(time_series))) * round((len(bf) + 0.5) / 2) )#regularization
+        return error
+    
+    errors = []
     for node in range(nodes):
         min_uf = []
         min_fit = sys.maxsize
@@ -183,71 +181,10 @@ def infer_boolean_network(time_series, partial_functions, max_K):
                 min_fit = fit
                 min_uf = list(decoded_solution)
         print(f"Node: {node} Error: {min_fit}")
+        errors.append(min_fit)
         boolean_network.append(min_uf)
 
-    return boolean_network
-
-
-def generate_operations(x, nodes):
-    y = x % nodes
-    if y == 0:
-        return "and"
-    elif y == 1:
-        return "or"
-
-def generate_expression(bf, nodes):
-    expression = ""
-    n = round((len(bf) + 0.5) / 2)
-    for j in range(n):
-        a = bf[j]
-        if a < 0:
-            expression += "int(not {" + str((a * -1) - 1) + "}) "
-        else:
-            expression += "{" + str(a) + "} "
-        if (j + n) < len(bf):
-            expression += f"{generate_operations(bf[j + n], nodes)} "
-    return expression
-
-def generate_time_series(nodes, max_K, num_of_samples, noise):
-    boolean_network = []
-    for _ in range(nodes):
-        update_function = []
-        k = random.randint(1, max_K)
-        counter = 0
-        regulators = []
-        while counter != k:
-            regulator = random.randint(-nodes, nodes-1)
-            if (regulator >= 0 and regulator not in regulators):
-                update_function.append(regulator)
-                regulators.append(regulator)
-                counter += 1
-            elif (regulator < 0 and abs(regulator + 1) not in regulators):
-                update_function.append(regulator)
-                regulators.append(abs(regulator) - 1)
-                counter += 1
-
-        for _ in range(k-1):
-            update_function.append(random.randint(nodes*k, nodes*k + 1))
-        boolean_network.append(update_function)
-
-    time_series = []
-    for _ in range(int(num_of_samples / 2)):
-        time_point = []
-        for _ in range(nodes):
-            time_point.append(random.randint(0,1))
-        time_series.append(time_point)
-        next_timepoint = []
-        for func in boolean_network:
-            boolean_function = generate_expression(func, nodes)
-            next_timepoint.append(eval(boolean_function.format(*time_point)))
-        time_series.append(next_timepoint)
-
-    for i in range(len(time_series)):
-        for j in range(len(time_series[0])):
-            if random.random() < noise:
-                time_series[i][j] = (time_series[i][j] + 1) % 2
-
-    return boolean_network, time_series
+    return boolean_network, errors
 
 def display_graph(path, bn, nodes):
     dot = graphviz.Digraph("aproximated_bn")
@@ -281,7 +218,7 @@ def read_time_serie(path):
     except IOError:
         print(f"An error occurred while reading the file {path}.")
 
-def save_results(path, bn, nodes):
+def save_results(path, bn, nodes, errors):
     if not os.path.exists(path):
         try:
             # Create the directory
@@ -293,11 +230,26 @@ def save_results(path, bn, nodes):
     # display_graph("expected", expected_boolean_network, nodes)
     display_graph(f"./{path}/infered", bn, nodes)
     model_string = Path(f"./{path}/infered.aeon").read_text()
+    errors_file = open(f"./{path}/errors.txt", "w")
+    for i in range(len(errors)):
+        errors_file.write(f"Node: {i} Error: {errors[i]}\n")
+    errors_file.close()
     # print(model_string)
     model = BooleanNetwork.from_aeon(model_string)
     print(model.to_aeon())
 
-    
+def read_partition_functions(path):
+    partial_functions = []
+    try:
+        with open(path, 'r') as file:
+            for line in file:
+                if line[0] == "$":
+                    partial_functions.append(line.split(':')[1].strip())
+        return(partial_functions)
+    except FileNotFoundError:
+        print(f"The file {path} was not found.")
+    except IOError:
+        print(f"An error occurred while reading the file {path}.") 
 
 
 #################################################
@@ -328,9 +280,13 @@ if __name__ == "__main__":
     max_K = args.max_k
     transition_graph = transition_graph_construction(time_series)
     async_time_series = transition_graph.get_async_time_series()
-    partial_functions = ["p1(x_2)", "p2(x_1, x_0, x_2)", "x_2"]
-    bn = infer_boolean_network(async_time_series, partial_functions, max_K)
-    save_results(output_path, bn, nodes)
+    for row in async_time_series:
+        print(row)
+
+    # partial_functions = read_partition_functions()
+    partial_functions = []
+    bn, errors = infer_boolean_network(async_time_series, partial_functions, max_K)
+    save_results(output_path, bn, nodes, errors)
     
 
 

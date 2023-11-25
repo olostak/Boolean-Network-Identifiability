@@ -1,5 +1,4 @@
 from itertools import permutations, product
-from collections import deque
 
 
 class Node:
@@ -78,8 +77,6 @@ def add_path_to_graph(graph, state, path):
     for change in path:
         next_state = prev_state.copy()
         next_state[change] = (prev_state[change] + 1 ) % 2
-        if prev_state == [1, 0, 1]:
-            print(f"# {prev_state} -> {next_state}")
         graph.add_transition(prev_state, next_state, change)
         prev_state = next_state
 
@@ -114,19 +111,21 @@ def transition_graph_construction(timeseries):
     return graph
 
 def truth_table_to_sop(truth_table):
-    sop_terms = []
-
-    for row in truth_table:
-        inputs, output = row
-        if output == 1:
-            term = []
-            for idx, val in enumerate(inputs):
-                if val == 1:
-                    term.append(f"x_{idx}")
-                else:
-                    term.append(f"!x_{idx}")
-            sop_terms.append(' & '.join(term))
-    return ' | '.join(['({})'.format(item) for item in sop_terms])    
+    sop_functions = []
+    for var_i in range(len(truth_table[0][0])):
+        sop_terms = []
+        for row in truth_table:
+            inputs, output = row
+            if output[var_i] == 1:
+                term = []
+                for idx, val in enumerate(inputs):
+                    if val == 1:
+                        term.append(f"x_{idx}")
+                    else:
+                        term.append(f"!x_{idx}")
+                sop_terms.append(' & '.join(term))
+        sop_functions.append(' | '.join(['({})'.format(item) for item in sop_terms]))
+    return sop_functions   
 
 
 def print_function(bn, compatible_instantiations):
@@ -176,7 +175,93 @@ def parse_partial_function(partial_function):
     partial_function_parts = partial_function.split(" ")
     
 
+def add_path_to_list(list, state, path):
+    prev_state = state
+    p = [prev_state]
+    for change in path:
+        next_state = prev_state.copy()
+        next_state[change] = (prev_state[change] + 1 ) % 2
+        p.append(next_state)
+        prev_state = next_state
+    list.append(p)
 
+
+def get_async_truth_tables(timeseries):
+    stable = get_stable_values(timeseries)
+    truth_tables = []
+    paths = []
+    essential_truth_table = {}
+    for state, transition in timeseries:
+        changes = []
+        state_paths = []
+        for i in range(len(state)):
+            if state[i] != transition[i]:
+                changes.append(i)
+        if len(changes) > 1:
+            changes_permutation = permutations(changes)
+            len_paths = 0
+            for perm_changes in changes_permutation:
+                if check_path_respect_stable(perm_changes, state, stable):
+                    add_path_to_list(state_paths, state, perm_changes)
+                    len_paths += 1
+            if len == 0:
+                return []
+            paths.append(state_paths)
+        else:
+            essential_truth_table[str(state)] = (state, transition)
+
+
+    all_combinations = list(product(*paths))
+    for combination in all_combinations:
+        truth_table = essential_truth_table.copy()
+        is_valid = True
+        for p in combination:
+            prev_state = p[0]
+            for i in range(1, len(p)):
+                if str(prev_state) not in truth_table.keys():
+                    truth_table[str(prev_state)] = (prev_state, p[i])
+                else:
+                    if truth_table[str(prev_state)][1] != p[i]:
+                        is_valid = False
+                        break
+                prev_state = p[i].copy()
+            if not is_valid:
+                print("is not valid")
+                break
+        if is_valid:
+            truth_tables.append(list(truth_table.values()))
+
+    return truth_tables
+    """for tt in truth_tables:
+        for row in tt.values():
+            print(row)
+        print("##############################################################")
+    print(len(truth_tables))"""
+    
+
+
+"""timeseries = [
+    ([0, 0, 0],[0, 1, 0]),
+    ([0, 0, 1],[0, 1, 1]),
+    ([0, 1, 0],[0, 0, 0]),
+    ([0, 1, 1],[1, 0, 1]),
+    ([1, 0, 0],[0, 1, 0]),
+    ([1, 0, 1],[0, 1, 1]),
+    ([1, 1, 0],[0, 0, 0]),
+    ([1, 1, 1],[1, 0, 1]),
+]
+
+truth_tables = get_async_truth_tables(timeseries)
+for truth_table in truth_tables:
+    print(len(truth_table))
+    for row in truth_table:
+        print(row)"""
+
+
+
+
+
+        
 
     
     
