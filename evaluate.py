@@ -2,9 +2,29 @@ import os
 import random
 from biodivine_aeon import *
 from pathlib import Path
-from  benchmarks import *
+from benchmarks import *
+import ast
 
-timeseries= [
+
+def read_time_serie(path):
+    time_series = []
+    try:
+        with open(path, 'r') as file:
+            for line in file:
+                list_strs = line.split('],[', 1)
+                if len(list_strs) == 2:
+                    list1 = ast.literal_eval(list_strs[0] + ']')
+                    list2 = ast.literal_eval('[' + list_strs[1])
+                    time_series.append((list1, list2))
+                else:
+                    print("Invalid line format:", line.strip())
+        return time_series
+    except FileNotFoundError:
+        print(f"The file {path} was not found.")
+    except IOError:
+        print(f"An error occurred while reading the file {path}.")
+
+"""timeseries= [
 ([0, 0, 0],[0, 1, 0]),
 ([0, 0, 1],[0, 1, 1]),
 ([0, 1, 0],[0, 0, 0]),
@@ -13,7 +33,9 @@ timeseries= [
 ([1, 0, 1],[0, 1, 1]),
 ([1, 1, 0],[0, 0, 0]),
 ([1, 1, 1],[1, 0, 1]),
-]
+]"""
+
+timeseries = read_time_serie("./evaluate/cel_division.txt")
 
 
 def generate_operations(x, nodes):
@@ -77,7 +99,7 @@ def generate_time_series(nodes, max_K, num_of_samples, noise):
 
     return boolean_network, time_series
 
-random.seed(42)
+psbn_path = "./evaluate/psbn.aeon"
 input_paths = []
 for i in range(len(timeseries) - (len(timeseries) - 5)):
     path = f"./evaluate/evaluate_missing_{i}.txt"
@@ -90,13 +112,9 @@ for i in range(len(timeseries) - (len(timeseries) - 5)):
         f.write(f"{str(timeseries[j][0])},{str(timeseries[j][1])}\n")
     f.close()
 
-print(input_paths)
-
 for input_path in input_paths:
     output_path = input_path.replace(".txt", "")
-    os.system(f"python3 ./aproximative_method.py --input_path {input_path} --output_path {output_path} --max_k 9")
-
-    print(f"{output_path}/infered.aeon")
+    os.system(f"python3 ./aproximative_method.py --input_path {input_path} --psbn_path {psbn_path} --output_path {output_path} --max_k 9")
     infered_string = Path(f"{output_path}/infered.aeon").read_text()
     bn_infered = BooleanNetwork.from_aeon(infered_string)
 
@@ -121,7 +139,6 @@ for input_path in input_paths:
 
 for input_path in input_paths:
     output_path = input_path.replace(".txt", "")
-    psbn_path = "test_psbn.aeon"
     os.system(f"python3 ./deterministic_method.py --ts_path {input_path} --psbn_path {psbn_path}")
     print("#########################################################################################")
 

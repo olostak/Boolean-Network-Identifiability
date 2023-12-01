@@ -169,10 +169,6 @@ def generate_all_possible_functions(bn, n, timeserie, partial_bdd, state_variabl
             counter += 1
     print(f"{counter} / {len(missing_outputs)}")
     return possible_functions
-
-
-def parse_partial_function(partial_function):
-    partial_function_parts = partial_function.split(" ")
     
 
 def add_path_to_list(list, state, path):
@@ -210,8 +206,9 @@ def get_async_truth_tables(timeseries):
         else:
             essential_truth_table[str(state)] = (state, transition)
 
-
+    print(essential_truth_table)
     all_combinations = list(product(*paths))
+    print(all_combinations)
     for combination in all_combinations:
         truth_table = essential_truth_table.copy()
         is_valid = True
@@ -240,7 +237,43 @@ def get_async_truth_tables(timeseries):
     
 
 
-"""timeseries = [
+timeseries = [
+    ([0, 0, 0, 0, 0],[0, 0, 0, 0, 0]),
+    ([0, 0, 0, 0, 1],[0, 1, 0, 0, 0]),
+    ([0, 0, 0, 1, 0],[0, 0, 0, 0, 0]),
+    ([0, 0, 0, 1, 1],[0, 1, 0, 0, 0]),
+    ([0, 0, 1, 0, 0],[0, 0, 0, 0, 0]),
+    ([0, 0, 1, 0, 1],[0, 1, 0, 0, 0]),
+    ([0, 0, 1, 1, 0],[0, 0, 0, 0, 0]),
+    ([0, 0, 1, 1, 1],[0, 1, 0, 0, 0]),
+    ([0, 1, 0, 0, 0],[1, 0, 0, 0, 0]),
+    ([0, 1, 0, 0, 1],[1, 1, 0, 0, 0]),
+    ([0, 1, 0, 1, 0],[0, 0, 0, 0, 0]),
+    ([0, 1, 0, 1, 1],[0, 1, 0, 0, 0]),
+    ([0, 1, 1, 0, 0],[0, 0, 0, 0, 0]),
+    ([0, 1, 1, 0, 1],[0, 1, 0, 0, 0]),
+    ([0, 1, 1, 1, 0],[0, 0, 0, 0, 0]),
+    ([0, 1, 1, 1, 1],[0, 1, 1, 0, 0]),
+    ([1, 0, 0, 0, 0],[0, 0, 1, 1, 0]),
+    ([1, 0, 0, 0, 1],[0, 0, 0, 0, 0]),
+    ([1, 0, 0, 1, 0],[0, 0, 0, 1, 0]),
+    ([1, 0, 0, 1, 1],[0, 0, 0, 0, 0]),
+    ([1, 0, 1, 0, 0],[0, 0, 0, 1, 1]),
+    ([1, 0, 1, 0, 1],[0, 0, 0, 0, 0]),
+    ([1, 0, 1, 1, 0],[0, 0, 0, 1, 1]),
+    ([1, 0, 1, 1, 1],[0, 0, 1, 0, 0]),
+    ([1, 1, 0, 0, 0],[0, 0, 1, 1, 0]),
+    ([1, 1, 0, 0, 1],[0, 0, 0, 0, 0]),
+    ([1, 1, 0, 1, 0],[0, 0, 0, 1, 0]),
+    ([1, 1, 0, 1, 1],[0, 0, 0, 0, 0]),
+    ([1, 1, 1, 0, 0],[0, 0, 0, 1, 0]),
+    ([1, 1, 1, 0, 1],[0, 0, 0, 0, 0]),
+    ([1, 1, 1, 1, 0],[0, 0, 0, 1, 0]),
+    ([1, 1, 1, 1, 1],[0, 0, 0, 0, 0]),
+]
+
+
+timeseries = [
     ([0, 0, 0],[0, 1, 0]),
     ([0, 0, 1],[0, 1, 1]),
     ([0, 1, 0],[0, 0, 0]),
@@ -255,13 +288,4 @@ truth_tables = get_async_truth_tables(timeseries)
 for truth_table in truth_tables:
     print(len(truth_table))
     for row in truth_table:
-        print(row)"""
-
-
-
-
-
-        
-
-    
-    
+        print(row)
