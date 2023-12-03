@@ -1,25 +1,27 @@
-from aproximative_class import BooleanNetworkApproximator
+from approximative_framework import BooleanNetworkApproximator
 from helper_functions import read_time_serie, read_regulators
 import scipy.optimize
 import random
 from biodivine_aeon import *
 from asynchronose_boolaen_networks import *
 import argparse
+import re
 # requirement python 3.10
 from wrapdisc import Objective
 
 class ScipyApproximator(BooleanNetworkApproximator):
     def __init__(self) -> None:
         super().__init__()
+        self.LAMBDA = 2
 
-    def get_initial_solution(self, known_regulators):
+    def generate_initial_solution(self, known_regulators):
         initial_solution = []
         for _ in range(self.k):
             r = random.randint(0, len(known_regulators) - 1)
             initial_solution.append(known_regulators[r])
 
         for _ in range(self.k-1):
-            initial_solution.append(random.randint(self.nodes*self.k, self.nodes*self.k + 1))
+            initial_solution.append(random.randint(self.nodes*self.k, self.nodes*self.k + 4))
         return initial_solution
     
     def optimization(self, bounds, x0):
@@ -34,8 +36,8 @@ class ScipyApproximator(BooleanNetworkApproximator):
         #          THE OPTIMIZATION FUNCTION          #
         # #############################################
 
-        result = scipy.optimize.minimize(wrapped_objective, x0, bounds=bounds)
-        # result = scipy.optimize.differential_evolution(wrapped_objective, bounds=bounds)
+        result = scipy.optimize.minimize(wrapped_objective, x0, method='Nelder-Mead', bounds=bounds)
+        #result = scipy.optimize.differential_evolution(wrapped_objective, bounds=bounds)
 
         encoded_solution = result.x
         decoded_solution = list(wrapped_objective.decode(encoded_solution))
@@ -56,6 +58,19 @@ class ScipyApproximator(BooleanNetworkApproximator):
             return "nand"
         elif y == 4:
             return "xor"
+        
+    def __replace_nonelementar_operations_expression(self, match):
+        a, b = match.group(1), match.group(3)
+        operation = match.group(2)
+
+        if operation == 'xor':
+            return f"({b} and not {a}) or ( not {b} and {a})"
+        elif operation == 'nand':
+            return f"not ({a} and {b})"
+        elif operation == 'nor':
+            return f"not ({a} or {b})"
+        else:
+            return match.group()
     
     def __get_expression(self, bf):
         expression = ""
@@ -65,9 +80,11 @@ class ScipyApproximator(BooleanNetworkApproximator):
             if a < 0:
                 expression += "int(not {" + str((a * -1) - 1) + "}) "
             else:
-                expression += "{" + str(a) + "} "
+                expression += "int({" + str(a) + "}) "
             if (j + n) < len(bf):
                 expression += f"{self.__operations(bf[j + n])} "
+        pattern = r'.*(\(.*?\)|int\(.*?\)) (xor|nor|nand) (\(.*?\)|int\(.*?\)).*'
+        expression = re.sub(pattern, self.__replace_nonelementar_operations_expression, expression, count=0)
         return expression
     
     def objective_function(self, bf):
@@ -83,7 +100,7 @@ class ScipyApproximator(BooleanNetworkApproximator):
             target_val = eval(boolean_function.format(*self.time_series[i][0]))
             error += (self.time_series[i][1][self.node] - target_val)**2
 
-        error = error + ((self.LAMBDA / (2 * len(self.time_series))) * round((len(bf) + 0.5) / 2))#regularization
+        error = (error / (len(self.time_series))) + ((self.LAMBDA / (2 * len(self.time_series))) * round((len(bf) + 0.5) / 2))#regularization
         return error
 
 
@@ -103,7 +120,6 @@ if __name__ == "__main__":
     output_path = args.output_path
     time_series = read_time_serie(input_path)
     regulators = read_regulators(args.psbn_path)
-
 
     nodes = len(time_series[0][0])
     max_K = args.max_k

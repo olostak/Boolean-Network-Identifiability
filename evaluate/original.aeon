@@ -1,10 +1,24 @@
-
-var_1 ->? var_0
-var_2 ->? var_0
-$var_0: (var_1 & var_2)
-var_0 -?? var_1
-var_1 -?? var_1
-var_2 -?? var_1
-$var_1: (((!var_0 & !var_1) | ((!var_0 & var_1) & var_2)) | ((var_0 & var_1) & !var_2))
-var_2 ->? var_2
-$var_2: var_2 
+$var_0:((((!var_0 & var_1) & !var_2) & !var_3) | ((var_0 & !var_2) & !var_3))
+var_0 -> var_0
+var_1 -> var_0
+var_2 -| var_0
+var_3 -| var_0
+#position:GcrA:325,135
+$var_1:(!var_0 & var_4)
+var_0 -| var_1
+var_4 -> var_1
+#position:CcrM:462,222
+$var_2:((var_0 & !var_2) & !var_3)
+var_0 -> var_2
+var_2 -| var_2
+var_3 -| var_2
+#position:SciP:506,133
+$var_3:(var_0 & !var_4)
+var_0 -> var_3
+var_4 -| var_3
+#position:DnaA:374,224
+$var_4:(((var_0 & !var_1) & !var_4) & var_3)
+var_0 -> var_4
+var_1 -| var_4
+var_4 -| var_4
+var_3 -> var_4

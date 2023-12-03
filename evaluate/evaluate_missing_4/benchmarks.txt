@@ -1,3 +1,0 @@
-Shortest path: 0
-Shortest path: 0
-Truth table: 0.0

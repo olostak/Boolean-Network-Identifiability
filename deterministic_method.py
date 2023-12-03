@@ -1,5 +1,5 @@
 from biodivine_aeon import *
-from asynchronose_boolaen_networks import *
+from asynchronose_boolaen_networks import transition_graph_construction
 from helper_functions import read_time_serie, read_partial_functions
 import argparse
 
@@ -22,10 +22,6 @@ if __name__ == "__main__":
 
     transition_graph = transition_graph_construction(timeseries)
     non_complete_truth_table = transition_graph.get_truth_table()
-
-    print("Non complete truth table")
-    for row in non_complete_truth_table:
-        print(row)
 
     # async_truth_tables = get_async_truth_tables(timeseries)
     bn = BooleanNetwork.from_file(psbn_path)

@@ -53,3 +53,29 @@ def compare_matrix(original, submitted):
     avg = sums / (len(original) ** 2)
 
     return avg
+
+
+def get_true_false_positive_negative(original, submitted):
+    graph_original = original.graph()
+    graph_submitted = submitted.graph()
+    true_positives = 0 #  the number of correctly predicted edges,
+    true_negatives = 0 #  the number of correctly predicted non-edges,
+    false_positives = 0 # the number of falsely predicted edges,
+    false_negatives = 0 # the number of falsely predicted non-edges.
+
+    variables = graph_original.variables()
+    for variable in variables:
+        original_regurators = graph_original.regulators(variable)
+        submitted_regulators = graph_submitted.regulators(variable)
+        for variable in variables:
+            if variable in original_regurators and variable in submitted_regulators: 
+                true_positives += 1
+            elif variable not in original_regurators and variable not in submitted_regulators: 
+                true_negatives += 1
+            elif variable not in original_regurators and variable in submitted_regulators: 
+                false_positives += 1
+            elif variable in original_regurators and variable not in submitted_regulators:
+                false_negatives += 1 
+    
+    return true_positives, true_negatives, false_positives, false_negatives
+    

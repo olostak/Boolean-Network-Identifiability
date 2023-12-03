@@ -102,11 +102,10 @@ def transition_graph_construction(timeseries):
             for perm_changes in changes_permutation:
                 if check_path_respect_stable(perm_changes, state, stable):
                     add_path_to_graph(graph, state, perm_changes)
-                    len_paths += 1
+                """len_paths += 1
             if len_paths == 0:
-                return TransitionGraph()
+                return TransitionGraph()"""
         elif len(changes) == 1:
-            # print(f"{state} -> {transition}")
             graph.add_transition(state, transition, changes[0])
     return graph
 
@@ -237,7 +236,7 @@ def get_async_truth_tables(timeseries):
     
 
 
-timeseries = [
+"""timeseries = [
     ([0, 0, 0, 0, 0],[0, 0, 0, 0, 0]),
     ([0, 0, 0, 0, 1],[0, 1, 0, 0, 0]),
     ([0, 0, 0, 1, 0],[0, 0, 0, 0, 0]),
@@ -288,4 +287,4 @@ truth_tables = get_async_truth_tables(timeseries)
 for truth_table in truth_tables:
     print(len(truth_table))
     for row in truth_table:
-        print(row)
+        print(row)"""

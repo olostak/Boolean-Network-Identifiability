@@ -1,5 +1,4 @@
 import sys
-import sys
 from biodivine_aeon import *
 import re
 from abc import ABC, abstractmethod
@@ -7,10 +6,10 @@ import os
 from pathlib import Path
 from wrapdisc.var import RandintVar
 import graphviz
+from collections import defaultdict
 
 class BooleanNetworkApproximator(ABC):
     def __init__(self) -> None:
-        self.LAMBDA = 10
         self.nodes = 0
         self.time_series = []
         self.node = 0
@@ -28,7 +27,7 @@ class BooleanNetworkApproximator(ABC):
             for k in range(1, max_K):
                 self.k = k
                 bounds = self.__get_bounds()
-                x0 = self.get_initial_solution(known_regulators[str(node)])
+                x0 = self.generate_initial_solution(known_regulators[str(node)])
                 solution = self.optimization(bounds, x0)
                 fit = self.objective_function(solution)
                 if fit < min_fit:
@@ -42,7 +41,7 @@ class BooleanNetworkApproximator(ABC):
         return boolean_network, errors
     
     @abstractmethod
-    def get_initial_solution(self, known_regulators):
+    def generate_initial_solution(self, known_regulators):
         pass
 
     def __get_bounds(self):
@@ -51,7 +50,7 @@ class BooleanNetworkApproximator(ABC):
             bounds.append(RandintVar(-self.nodes, self.nodes-1))
 
         for _ in range(self.k-1):
-            bounds.append(RandintVar(self.nodes*self.k, self.nodes*self.k + 1))
+            bounds.append(RandintVar(self.nodes*self.k, self.nodes*self.k + 4))
         return bounds
 
     @abstractmethod
@@ -67,11 +66,11 @@ class BooleanNetworkApproximator(ABC):
         operation = match.group(2)
 
         if operation == 'xor':
-            return f"({b} & !{a}) | (!{b} & {a})"
+            return f"({a} & !{b}) | (!{a} & {b})"
         elif operation == 'nand':
-            return f"!({a} & {b})"
+            return f"!{a} | !{b}"
         elif operation == 'nor':
-            return f"!({a} | {b})"
+            return f"!{a} & !{b}"
         else:
             return match.group()
             
@@ -88,35 +87,67 @@ class BooleanNetworkApproximator(ABC):
             return "nand"
         elif y == 4:
             return "xor"
+        
+    def __normalize_expression(self, expression):
+        patterns = {'xor': r'(!?\([^)]*\)|[^\s()]+)\s+(xor|nor|nand)\s+(!?\([^)]*\)|[^\s()]+)',
+                    'nand': r'(!?\([^)]*\)|[^\s()]+)\s+(xor|nor|nand)\s+(!?\([^)]*\)|[^\s()]+)',
+                    'nor': r'(!?\([^)]*\)|[^\s()]+)\s+(xor|nor|nand)\s+(!?\([^)]*\)|[^\s()]+)'}
+        
+        expression = re.sub(patterns['xor'], self.__replace_nonelementar_operations, expression)
+        expression = re.sub(patterns['nor'], self.__replace_nonelementar_operations, expression)
+        expression = re.sub(patterns['nand'], self.__replace_nonelementar_operations, expression)
+        expression = re.sub(r'!!', '', expression)
+        return expression
+    
+    def __identify_variable_negation(self, expression):
+        pattern = r'!?(var_\d+)'
+        var_occurrences = defaultdict(lambda: {'negated': False, 'positive': False})
+        for match in re.finditer(pattern, expression):
+            var = match.group(1)
+            is_negated = match.group(0).startswith('!')
+            if is_negated:
+                var_occurrences[var]['negated'] = True
+            else:
+                var_occurrences[var]['positive'] = True
+                
+        negated = [var for var, types in var_occurrences.items() if types['negated'] and not types['positive']]
+        positive = [var for var, types in var_occurrences.items() if types['positive']and not types['negated']]
+        both_forms = [var for var, types in var_occurrences.items() if types['negated'] and types['positive']]
+
+        return positive, negated, both_forms
 
     def __get_aeon_format(self, node, bf):
-        expression = f"$var_{node}: "
+        expression = ""
         n = round((len(bf) + 0.5) / 2)
-        architecture = []
         for j in range(n):
             a = bf[j]
-            edge = ""
             if a < 0:
-                edge = f"var_{(a * -1) - 1} -| var_{node}\n"
                 expression += "!" + f"var_{(a * -1) - 1} "
             else:
-                edge = f"var_{a} -> var_{node}\n"
                 expression += f"var_{a} "
             if (j + n) < len(bf):
                 expression += f"{self.__aeon_operations(bf[j + n])} "
-            architecture.append(edge)
-        expression += "\n"
+        
+        expression = self.__normalize_expression(expression)
+
+        architecture = []
+        positive, negative, both = self.__identify_variable_negation(expression)
+        for var in positive:
+            architecture.append(f"{var} -> var_{node}")
+        for var in negative:
+            architecture.append(f"{var} -| var_{node}")
+        for var in both:
+            architecture.append(f"{var} -? var_{node}")
+
         return architecture, expression
 
     def create_aeon_file(self, bn, path):
-        pattern = r"(\d+) (xor|nand|nor) (\d+)"
         f = open(path, "w")
         for i in range(len(bn)):
             arch, func = self.__get_aeon_format(i, bn[i])
-            func = re.sub(pattern, self.__replace_nonelementar_operations, func)
             for edge in arch:
-                f.write(edge)
-            f.write(func)
+                f.write(f"{edge}\n")
+            f.write(f"$var_{i}: {func}\n")
         f.close()
 
     def display_graph(self, path, bn):

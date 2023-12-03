@@ -1,0 +1,8 @@
+Attractor count: 66.66666666666667
+Shortest path: 68.0
+Truth tables: 52.4
+Accuracy: 0.68
+Precision: 0.8888888888888888
+Recall: 0.5333333333333333
+F1 score: 0.6666666666666667
+In-degree similarity: 0.76

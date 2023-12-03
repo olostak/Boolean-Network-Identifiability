@@ -1,6 +1,6 @@
-import biodivine_aeon
-from sympy.parsing.sympy_parser import parse_expr
-from sympy.logic.boolalg import And, Or, Not, Implies, Xnor, simplify_logic, truth_table
+from sympy.logic.boolalg import simplify_logic, truth_table
+import re
+from itertools import product
 
 
 def run_benchmark(model_original, model_submitted):
@@ -24,28 +24,24 @@ def run_benchmark(model_original, model_submitted):
 
     return avg
 
+def get_expression(function):
+    pattern_not = r'!v_(\d+)'
+    pattern = r'v_(\d+)'
+    expression = re.sub(pattern_not, r'int( not {\1})', function)
+    expression = re.sub(pattern, r'int({\1})', expression)
+    return expression
+
 
 def compare_functions(function_original, function_submitted, model_vars):
-
-    function_original = function_original.replace("!", "~")
-    function_submitted = function_submitted.replace("!", "~")
-
-    equiv_results = []
-
-    expr_original = simplify_logic(function_original)
-    expr_submitted = simplify_logic(function_submitted)
-
-    table_original = list(truth_table(expr_original, model_vars))
-    table_submitted = list(truth_table(expr_submitted, model_vars))
-
-    for row in range(0, len(table_original)):
-        value_original = table_original[row][-1]
-        value_submitted = table_submitted[row][-1]
-
-        equiv_results.append(value_submitted == value_original)
-
-    true_count = sum(equiv_results)
-    total_count = len(equiv_results)
+    expression_original = get_expression(function_original)
+    expression_submitted = get_expression(function_submitted)
+    
+    total_count = 0
+    true_count = 0
+    for p in product((True, False), repeat=len(model_vars)):
+        if eval(expression_original.format(*list(p))) == eval(expression_submitted.format(*list(p))):
+            true_count += 1
+        total_count += 1
     rating = round(true_count / total_count * 100)
 
     return rating
