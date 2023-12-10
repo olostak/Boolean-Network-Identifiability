@@ -36,7 +36,7 @@ if __name__ == "__main__":
         print(row)
     var_count = len(non_complete_truth_table[0][0])
 
-    for var_i in range(var_count):
+    for var_i in range(len(partial_functions)):
         print(">>> Variable", var_i)
         
         var_function = partial_functions[var_i]
@@ -69,7 +69,6 @@ if __name__ == "__main__":
                 valid_functions = valid_functions.l_and(partial_function_is_true)
             else:
                 valid_functions = valid_functions.l_and_not(partial_function_is_true)
-            
         # Now we can enumerate the satisfying valuations of the BDD.
         # This step relies on the fact that function of `var_i` in `bn` is exactly `partial_functions[var_i]`.    
         # In other words, if we want to use projection to inspect possible instantiations of a partial function,

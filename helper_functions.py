@@ -64,3 +64,18 @@ def read_partial_functions(path):
         print(f"The file {path} was not found.")
     except IOError:
         print(f"An error occurred while reading the file {path}.")
+
+
+def read_functions_as_expressions(path):
+    update_functions = read_partial_functions(path)
+    expressions = []
+    for update_function in update_functions:
+        pattern = r'var_(\d+)'
+        expression = update_function.replace('!', ' not ')
+        expression = expression.replace('&', ' and ')
+        expression = expression.replace('|', ' or ')
+        expression = re.sub(pattern, "int({\1})", expression)
+        print(expression)
+        expressions.append(expression)
+    return expressions
+

@@ -17,7 +17,7 @@ class BooleanNetworkApproximator(ABC):
 
     def infer_boolean_network(self, time_series, known_regulators, max_K, output_path=None):
         boolean_network = []
-        self.nodes = len(time_series[0][0])
+        self.nodes = len(known_regulators)
         self.time_series = time_series
         errors = []
         for node in range(self.nodes):
@@ -29,7 +29,13 @@ class BooleanNetworkApproximator(ABC):
                 bounds = self.__get_bounds()
                 x0 = self.generate_initial_solution(known_regulators[str(node)])
                 solution = self.optimization(bounds, x0)
+                current_fit = self.objective_function(x0)
                 fit = self.objective_function(solution)
+                while fit < current_fit:
+                    current_fit = fit
+                    x0 = self.mutate_solution(solution)
+                    solution = self.optimization(bounds, x0)
+                    fit = self.objective_function(solution)
                 if fit < min_fit:
                     min_fit = fit
                     min_uf = list(solution)
@@ -42,6 +48,10 @@ class BooleanNetworkApproximator(ABC):
     
     @abstractmethod
     def generate_initial_solution(self, known_regulators):
+        pass
+
+    @abstractmethod
+    def mutate_solution(self, solution):
         pass
 
     def __get_bounds(self):
@@ -60,6 +70,50 @@ class BooleanNetworkApproximator(ABC):
     @abstractmethod
     def optimization(self, bounds, x0):
         pass
+
+    def get_num_of_regulators(self, bf):
+        return round((len(bf) + 0.5) / 2)
+    
+    def __operations(self, x):
+        y = x % self.nodes
+        if y == 0:
+            return "and"
+        elif y == 1:
+            return "or"
+        elif y == 2:
+            return "nor"
+        elif y == 3:
+            return "nand"
+        elif y == 4:
+            return "xor"
+        
+    def __replace_nonelementar_operations_expression(self, match):
+        a, b = match.group(1), match.group(3)
+        operation = match.group(2)
+
+        if operation == 'xor':
+            return f"({b} and not {a}) or ( not {b} and {a})"
+        elif operation == 'nand':
+            return f"not ({a} and {b})"
+        elif operation == 'nor':
+            return f"not ({a} or {b})"
+        else:
+            return match.group()
+        
+    def get_expression(self, bf):
+        expression = ""
+        n = round((len(bf) + 0.5) / 2)
+        for j in range(n):
+            a = bf[j]
+            if a < 0:
+                expression += "int(not {" + str((a * -1) - 1) + "}) "
+            else:
+                expression += "int({" + str(a) + "}) "
+            if (j + n) < len(bf):
+                expression += f"{self.__operations(bf[j + n])} "
+        pattern = r'.*(\(.*?\)|int\(.*?\)) (xor|nor|nand) (\(.*?\)|int\(.*?\)).*'
+        expression = re.sub(pattern, self.__replace_nonelementar_operations_expression, expression, count=0)
+        return expression
     
     def __replace_nonelementar_operations(self, match):
         a, b = match.group(1), match.group(3)

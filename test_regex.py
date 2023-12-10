@@ -109,7 +109,7 @@ output_expr = invert_negations_in_brackets(input_expr)
 print(output_expr)"""
 
 
-import re
+"""import re
 from collections import defaultdict
 
 def identify_variable_negation(expr):
@@ -152,8 +152,20 @@ expression = re.sub(pattern, r'int({\1})', expression)
 for p in product((True, False), repeat=5):
      print(list(p))
      print(eval(expression.format(*list(p))))
-print(expression)
+print(expression)"""
 
-     
+from biodivine_aeon import *
 
+MODEL = "tumor_cell_invasion_and_migration"
+original_string = Path(f"./evaluate/{MODEL}/original.aeon").read_text()
+bn_original = BooleanNetwork.from_aeon(original_string)
+stg_original = SymbolicAsyncGraph(bn_original)
+attractors_original = find_attractors(stg_original)
+
+amount_original = len(attractors_original)
+print(amount_original)
+
+for attractor in attractors_original:
+     classes = classify_attractor(stg_original, attractor)
+     print(classes)
      

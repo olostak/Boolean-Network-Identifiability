@@ -1,0 +1,24 @@
+$x0:p0(x0, x1, x2, x3)
+x0 -? x0
+x1 -? x0
+x2 -? x0
+x3 -? x0
+#position:GcrA:325,135
+$x1:p1(x0, x4)
+x0 -? x1
+x4 -? x1
+#position:CcrM:462,222
+$x2:p2(x0, x2, x3)
+x0 -? x2
+x2 -? x2
+x3 -? x2
+#position:SciP:506,133
+$x3:p3(x0, x4)
+x0 -? x3
+x4 -? x3
+#position:DnaA:374,224
+$x4:p4(x0, x1, x4, x3)
+x0 -? x4
+x1 -? x4
+x4 -? x4
+x3 -? x4

@@ -4,13 +4,12 @@ digraph aproximated_bn {
 	2 [label=2]
 	3 [label=3]
 	4 [label=4]
-	0 -> 0
-	2 -> 0 [style=dashed]
-	4 -> 1
-	0 -> 1
+	0 -> 0 [style=dashed]
+	0 -> 1 [style=dashed]
 	0 -> 2
-	1 -> 2 [style=dashed]
-	4 -> 3
-	0 -> 3
-	3 -> 4
+	3 -> 2 [style=dashed]
+	2 -> 2
+	0 -> 3 [style=dashed]
+	0 -> 4
+	1 -> 4
 }

@@ -2,9 +2,11 @@ import sys
 from pathlib import Path
 parent_dir = str(Path(__file__).resolve().parent.parent)
 sys.path.append(parent_dir)
+import re
 
 import unittest
 import asynchronose_boolaen_networks as ABN
+from approximative_method import ScipyApproximator
 
 # This is our test case for the add function
 class UtilityFunctions(unittest.TestCase):
@@ -133,6 +135,39 @@ class ConstructTransitionGraph(unittest.TestCase):
     def test_parse_partial_functions(self):
         partial_function = "x_0 & p1(x_1, x_2)"
         ABN.parse_partial_function(partial_function)
+
+class ScipyApproximator(unittest.TestCase):
+    def test_get_expression(self):
+        def __replace_nonelementar_operations_expression(self, match):
+            a, b = match.group(1), match.group(3)
+            operation = match.group(2)
+
+            if operation == 'xor':
+                return f"({b} and not {a}) or ( not {b} and {a})"
+            elif operation == 'nand':
+                return f"not ({a} and {b})"
+            elif operation == 'nor':
+                return f"not ({a} or {b})"
+            else:
+                return match.group()
+    
+        def __get_expression(self, bf):
+            expression = ""
+            n = round((len(bf) + 0.5) / 2)
+            for j in range(n):
+                a = bf[j]
+                if a < 0:
+                    expression += "int(not {" + str((a * -1) - 1) + "}) "
+                else:
+                    expression += "{" + str(a) + "} "
+                if (j + n) < len(bf):
+                    expression += f"{self.__operations(bf[j + n])} "
+            pattern = r"(\d+) (xor|nand|nor) (\d+)"
+            expression = re.sub(pattern, self.__replace_nonelementar_operations_expression, expression)
+            return expression
+        
+        
+
 
 
 

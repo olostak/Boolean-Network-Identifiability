@@ -18,7 +18,11 @@ class ScipyApproximator(BooleanNetworkApproximator):
         initial_solution = []
         for _ in range(self.k):
             r = random.randint(0, len(known_regulators) - 1)
-            initial_solution.append(known_regulators[r])
+            s = random.randint(0, 1)
+            if s:
+                initial_solution.append(known_regulators[r])
+            else:
+                initial_solution.append(-1 * (known_regulators[r] + 1))
 
         for _ in range(self.k-1):
             initial_solution.append(random.randint(self.nodes*self.k, self.nodes*self.k + 4))
@@ -43,58 +47,30 @@ class ScipyApproximator(BooleanNetworkApproximator):
         decoded_solution = list(wrapped_objective.decode(encoded_solution))
         return decoded_solution
     
-    def __get_num_of_regulators(self, bf):
-        return round((len(bf) + 0.5) / 2)
-    
-    def __operations(self, x):
-        y = x % self.nodes
-        if y == 0:
-            return "and"
-        elif y == 1:
-            return "or"
-        elif y == 2:
-            return "nor"
-        elif y == 3:
-            return "nand"
-        elif y == 4:
-            return "xor"
         
-    def __replace_nonelementar_operations_expression(self, match):
-        a, b = match.group(1), match.group(3)
-        operation = match.group(2)
-
-        if operation == 'xor':
-            return f"({b} and not {a}) or ( not {b} and {a})"
-        elif operation == 'nand':
-            return f"not ({a} and {b})"
-        elif operation == 'nor':
-            return f"not ({a} or {b})"
-        else:
-            return match.group()
-    
-    def __get_expression(self, bf):
-        expression = ""
-        n = round((len(bf) + 0.5) / 2)
-        for j in range(n):
-            a = bf[j]
-            if a < 0:
-                expression += "int(not {" + str((a * -1) - 1) + "}) "
+    def mutate_solution(self, solution):
+        solution_len = len(solution) - 1
+        mutate = random.randint(0,solution_len)
+        if mutate < self.k:
+            regulator = random.randint(0, self.nodes)
+            sign = random.randint(0, 1)
+            if sign:
+                solution[mutate] = regulator
             else:
-                expression += "int({" + str(a) + "}) "
-            if (j + n) < len(bf):
-                expression += f"{self.__operations(bf[j + n])} "
-        pattern = r'.*(\(.*?\)|int\(.*?\)) (xor|nor|nand) (\(.*?\)|int\(.*?\)).*'
-        expression = re.sub(pattern, self.__replace_nonelementar_operations_expression, expression, count=0)
-        return expression
+                solution[mutate] = (-1 * (regulator + 1))
+        else:
+            solution[mutate] = random.randint(self.nodes*self.k, self.nodes*self.k + 4)
+        return solution
+
     
     def objective_function(self, bf):
         regulators = []
         # penalize solutions with repeting regulator
-        for i in range(self.__get_num_of_regulators(bf)):
+        for i in range(super().get_num_of_regulators(bf)):
             if (bf[i] >= 0 and bf[i] in regulators) or (bf[i] < 0 and abs(bf[i] + 1) in regulators):
                 return len(self.time_series)
             regulators.append(bf[i] if bf[i] >= 0 else abs(bf[i]) - 1)
-        boolean_function = self.__get_expression(bf)
+        boolean_function = super().get_expression(bf)
         error = 0
         for i in range(0, len(self.time_series)-1):
             target_val = eval(boolean_function.format(*self.time_series[i][0]))

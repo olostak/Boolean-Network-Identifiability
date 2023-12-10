@@ -1,0 +1,7 @@
+scipy
+biodivine_aeon
+wrapdisc
+grphviz
+ast
+sympy
+igraph

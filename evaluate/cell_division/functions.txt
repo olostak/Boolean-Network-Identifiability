@@ -1,0 +1,19 @@
+Var0:
+
+((((\neg x0 \land x1) \land x2) \land \neg x3) \lor ((((x0 \land x1) \land \neg x2) \land \neg x3) \land x4))
+
+((((((\neg x0 \land \neg x1) \land \neg x2) \land \neg x3) \land \neg x4) \lor (((\neg x0 \land x1) \land x2) \land \neg x3)) \lor ((((x0 \land x1) \land \neg x2) \land \neg x3) \land x4))
+
+Var1:
+
+((\neg x0 \land x4) \lor ((((x0 \land \neg x1) \land x2) \land \neg x3) \land x4))
+
+(((((((\neg x0 \land \neg x1) \land \neg x2) \land \neg x3) \lor ((((\neg x0 \land \neg x1) \land \neg x2) \land x3) \land x4)) \lor (((\neg x0 \land \neg x1) \land x2) \land x4)) \lor ((\neg x0 \land x1) \land x4)) \lor ((((x0 \land \neg x1) \land x2) \land \neg x3) \land x4))
+
+Var3:
+
+((((((((\neg x0 \land x1) \land x2) \land \neg x3) \land \neg x4) \lor (((x0 \land \neg x1) \land \neg x2) \land \neg x3)) \lor (((x0 \land \neg x1) \land x2) \land \neg x3)) \lor ((((x0 \land \neg x1) \land x2) \land x3) \land \neg x4)) \lor ((x0 \land x1) \land \neg x4))
+
+(((((((((\neg x0 \land \neg x1) \land \neg x2) \land \neg x3) \land \neg x4) \lor ((((\neg x0 \land x1) \land x2) \land \neg x3) \land \neg x4)) \lor (((x0 \land \neg x1) \land \neg x2) \land \neg x3)) \lor (((x0 \land \neg x1) \land x2) \land \neg x3)) \lor ((((x0 \land \neg x1) \land x2) \land x3) \land \neg x4)) \lor ((x0 \land x1) \land \neg x4))
+
+
