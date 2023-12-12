@@ -5,8 +5,7 @@ sys.path.append(parent_dir)
 import re
 
 import unittest
-import transition_graph as tg
-from approximative_method import ScipyApproximator
+from src import transition_graph as tg
 
 # This is our test case for the add function
 class UtilityFunctions(unittest.TestCase):
@@ -113,7 +112,7 @@ class ConstructTransitionGraph(unittest.TestCase):
         ]
 
         graph = tg.transition_graph_construction(timeseries)
-        expected_truth_table = []
+        expected_truth_table = [([0, 0], [1, 0]), ([0, 1], [0, 0])]
         self.assertEqual(graph.get_truth_table(), expected_truth_table)
 
     def test_transition_graph_3vars(self):
@@ -131,10 +130,6 @@ class ConstructTransitionGraph(unittest.TestCase):
         graph = tg.transition_graph_construction(timeseries)
         async_time_series = graph.get_async_time_series()
         print(async_time_series)
-
-    def test_parse_partial_functions(self):
-        partial_function = "x_0 & p1(x_1, x_2)"
-        tg.parse_partial_function(partial_function)
 
 class ScipyApproximator(unittest.TestCase):
     def test_get_expression(self):

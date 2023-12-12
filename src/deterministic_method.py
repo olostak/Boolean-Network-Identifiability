@@ -23,7 +23,6 @@ if __name__ == "__main__":
     transition_graph = transition_graph_construction(timeseries)
     non_complete_truth_table = transition_graph.get_truth_table()
 
-    # async_truth_tables = get_async_truth_tables(timeseries)
     bn = BooleanNetwork.from_file(psbn_path)
 
     stg = SymbolicAsyncGraph(bn)
@@ -31,7 +30,6 @@ if __name__ == "__main__":
     bdd_ctx = ctx.bdd_variable_set()
     network_variables = bn.variables()
     state_variables = ctx.state_variables()
-    #for non_complete_truth_table in async_truth_tables:
     for row in non_complete_truth_table:
         print(row)
     var_count = len(non_complete_truth_table[0][0])
@@ -82,51 +80,3 @@ if __name__ == "__main__":
             print("\t", f.to_string(bn))
 
         print("############################################################")
-
-"""
-is not valid
-([0, 0, 0], [0, 1, 0])
-([0, 0, 1], [0, 1, 1])
-([0, 1, 0], [0, 0, 0])
-([1, 1, 1], [1, 0, 1])
-([0, 1, 1], [1, 1, 1])
-([1, 0, 0], [0, 0, 0])
-([1, 0, 1], [0, 0, 1])
-([1, 1, 0], [0, 1, 0])
->>> Variable 0
-         (x_1 & x_2)
->>> Variable 1
-         (((!x_0 & !x_1) | ((!x_0 & x_1) & x_2)) | ((x_0 & x_1) & !x_2))
->>> Variable 2
-         x_2
-############################################################
-([0, 0, 0], [0, 1, 0])
-([0, 0, 1], [0, 1, 1])
-([0, 1, 0], [0, 0, 0])
-([1, 1, 1], [1, 0, 1])
-([0, 1, 1], [1, 1, 1])
-([1, 0, 0], [0, 0, 0])
-([1, 0, 1], [0, 0, 1])
-([1, 1, 0], [1, 0, 0])
->>> Variable 0
-         (((!x_0 & x_1) & x_2) | (x_0 & x_1))
->>> Variable 1
-         ((!x_0 & !x_1) | ((!x_0 & x_1) & x_2))
->>> Variable 2
-         x_2
-############################################################
-([0, 0, 0], [0, 1, 0])
-([0, 0, 1], [0, 1, 1])
-([0, 1, 0], [0, 0, 0])
-([1, 1, 1], [1, 0, 1])
-([0, 1, 1], [1, 1, 1])
-([1, 0, 0], [1, 1, 0])
-([1, 1, 0], [0, 1, 0])
-([1, 0, 1], [0, 0, 1])
->>> Variable 0
-         ((((!x_0 & x_1) & x_2) | ((x_0 & !x_1) & !x_2)) | ((x_0 & x_1) & x_2))
->>> Variable 1
-         (((!x_0 & !x_1) | ((!x_0 & x_1) & x_2)) | (x_0 & !x_2))
->>> Variable 2
-         x_2
-"""

@@ -5,7 +5,7 @@ import random
 from biodivine_aeon import *
 from transition_graph import *
 import argparse
-import re
+
 # requirement python 3.10
 from wrapdisc import Objective
 
