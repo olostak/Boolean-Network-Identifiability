@@ -1,7 +1,6 @@
 scipy
 biodivine_aeon
 wrapdisc
-grphviz
-ast
+graphviz
 sympy
 igraph

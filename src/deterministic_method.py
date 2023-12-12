@@ -1,5 +1,5 @@
 from biodivine_aeon import *
-from asynchronose_boolaen_networks import transition_graph_construction
+from transition_graph import transition_graph_construction
 from helper_functions import read_time_serie, read_partial_functions
 import argparse
 

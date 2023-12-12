@@ -226,7 +226,6 @@ class BooleanNetworkApproximator(ABC):
                 print(f"Creation of the directory '{path}' failed due to: {error}")
         self.create_aeon_file(bn, f"./{path}/infered.aeon")
 
-        # display_graph("expected", expected_boolean_network, nodes)
         self.display_graph(f"./{path}/infered", bn)
         model_string = Path(f"./{path}/infered.aeon").read_text()
         errors_file = open(f"./{path}/errors.txt", "w")

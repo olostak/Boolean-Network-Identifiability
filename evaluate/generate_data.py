@@ -1,6 +1,8 @@
 import random
 import re
 
+MODEL = "cell_division"
+
 def read_functions_as_expressions(path):
     update_functions = []
     with open(path, 'r') as file:
@@ -18,17 +20,17 @@ def read_functions_as_expressions(path):
         expressions.append(expression)
     return expressions
 
-update_functions = read_functions_as_expressions("./evaluate/mir-9-neurogeneses/original.aeon")
+update_functions = read_functions_as_expressions(f"./evaluate/{MODEL}/original.aeon")
 
-with open('./evaluate/mir-9-neurogeneses/time_series.txt', 'w') as file:
+with open(f"./evaluate/{MODEL}/time_series.txt", 'w') as file:
     for _ in range(100):
         state = []
         time_series = []
         unique_tuples = set()
-        for i in range(0, 6):
+        for i in range(0, len(update_functions)):
             state.append(random.randint(0, 1))
         for _ in range(100):
-            function_id = random.randint(0, len(update_functions) - 1)
+            function_id = random.randint(0, (len(update_functions) - 1))
             next_state = state.copy()
             next_state[function_id] = int(eval(update_functions[function_id].format(*state)))
             if next_state != state:

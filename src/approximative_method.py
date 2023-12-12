@@ -3,7 +3,7 @@ from helper_functions import read_time_serie, read_regulators
 import scipy.optimize
 import random
 from biodivine_aeon import *
-from asynchronose_boolaen_networks import *
+from transition_graph import *
 import argparse
 import re
 # requirement python 3.10

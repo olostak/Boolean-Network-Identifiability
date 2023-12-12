@@ -1,21 +1,28 @@
 FROM ubuntu:latest
 
-RUN apt update -y && apt upgrade -y && \
-     apt-get install -y --no-install-recommends apt-utils && \
-    apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev -y && \
-    cd /usr/src && \
-    wget https://www.python.org/ftp/python/3.11.4/Python-3.11.4.tgz && \
-    tar xzf Python-3.11.4.tgz && \
-    cd Python-3.11.4 && \
-    ./configure --enable-optimizations && \
-    make && \
-    make altinstall && \
-    python3.11 --version
+WORKDIR /usr/src/app
 
-RUN apt-get update && apt-get install -y python3.11 python3-distutils python3-pip python3-apt
+# Install Python 3.10
+RUN apt-get update && \
+    apt -f install && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y python3.10 python3.10-distutils && \
+    apt-get clean
 
-WORKDIR /usr/app/src
+# Install pip
+RUN apt-get update && apt-get install -y python3-pip
+
+# Install graphviz
+RUN apt-get update && apt-get install -y graphviz
+
+# Make python3.11 the default python
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+
+# Set python3.11 as the default python3
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
 
 COPY . .
 
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt

@@ -7,8 +7,9 @@ import time
 
 
 MODEL = "cell_division"
-MODEL = "mir-9-neurogeneses"
+#MODEL = "mir-9-neurogeneses"
 #MODEL = "tumor_cell_invasion_and_migration"
+
 input_path = f"./evaluate/{MODEL}/time_series.txt"
 psbn_path = f"./evaluate/{MODEL}/psbn.aeon"
 
@@ -25,7 +26,7 @@ with open(f"./evaluate/{MODEL}/banchmarks.csv", 'w', newline='') as file:
 
     for _ in range(30):
         start_time = time.time()
-        os.system(f"python3 ./approximative_method.py --input_path {input_path} --psbn_path {psbn_path} --output_path {output_path} --max_k 25")
+        os.system(f"python3 ./src/approximative_method.py --input_path {input_path} --psbn_path {psbn_path} --output_path {output_path} --max_k 25")
         end_time = time.time()
 
 
@@ -41,15 +42,5 @@ with open(f"./evaluate/{MODEL}/banchmarks.csv", 'w', newline='') as file:
             benchmarks_dict[name] = value
         benchmarks_dict["Running time"] = end_time - start_time
         writer.writerow(benchmarks_dict)
-
-
-# psbn_path = "./test_timeseries/test_psbn.aeon"
-# os.system(f"python3 ./deterministic_method.py --ts_path {input_path} --psbn_path {psbn_path}")
-
-
-
-"""expected_boolean_network, time_series  = generate_time_series(4, 5, 10, 0.4)
-print(expected_boolean_network)
-print(time_series)"""
 
 
